@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { listRatings } from "@/lib/ratings";
+import { readConfig } from "@/lib/config";
+import { Stars } from "@/components/Stars";
 
 export default async function Home() {
-  const ratings = await listRatings();
+  const [ratings, config] = await Promise.all([listRatings(), readConfig()]);
   ratings.sort((a, b) => b.ratedAt.localeCompare(a.ratedAt));
   const recent = ratings.slice(0, 20);
 
@@ -47,8 +49,8 @@ export default async function Home() {
                   {r.premiereDate ? ` · premiered ${r.premiereDate}` : ""}
                 </p>
               </div>
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200">
-                {r.rating}
+              <span className="inline-flex h-8 items-center justify-center rounded-full bg-indigo-100 px-3 text-sm font-semibold text-amber-600 dark:bg-indigo-900 dark:text-amber-300">
+                <Stars rating={r.rating} mode={config.starDisplay} />
               </span>
             </li>
           ))}

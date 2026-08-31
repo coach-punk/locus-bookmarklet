@@ -2,6 +2,8 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { CONFIG_FILE, DATA_DIR } from "./paths";
 
+export type StarDisplayMode = "text" | "css";
+
 export interface AppConfig {
   /** TMDB v3 API key (or v4 read access token), entered/edited from the admin settings page. */
   tmdbApiKey: string;
@@ -9,12 +11,15 @@ export interface AppConfig {
   allowedGithubUsers: string[];
   /** scrypt hash of a fallback admin password, used when GitHub OAuth isn't configured. */
   adminTokenHash: string | null;
+  /** How ratings render as stars: plain unicode text, or CSS-customizable spans. */
+  starDisplay: StarDisplayMode;
 }
 
 const DEFAULT_CONFIG: AppConfig = {
   tmdbApiKey: "",
   allowedGithubUsers: [],
   adminTokenHash: null,
+  starDisplay: "text",
 };
 
 async function ensureDataDir() {

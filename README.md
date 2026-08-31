@@ -36,12 +36,16 @@ npm run dev
 Open [http://localhost:3000/admin](http://localhost:3000/admin), sign in (see
 below), then go to **Settings** to paste in your TMDB API key.
 
+To use a different port, pass `PORT` as a real environment variable (not just
+in `.env`, since the port is read before `.env` is loaded): `PORT=4000 npm run dev`.
+
 ### Environment variables
 
 | Variable | Required | Description |
 | --- | --- | --- |
 | `AUTH_SECRET` | Yes | Signs admin session cookies. Generate with `openssl rand -base64 32`. |
 | `DATA_DIR` | No | Where `config.json` and `ratings/*.md` are stored. Defaults to `./data`. |
+| `PORT` | No | Dev server port (`npm run dev`). Defaults to `3000`. Must be set in the shell environment, not `.env`. |
 | `GITHUB_ID` / `GITHUB_SECRET` | No | Enables "Sign in with GitHub". Create an OAuth App at [github.com/settings/developers](https://github.com/settings/developers) with callback URL `https://your-domain/api/auth/callback/github`. |
 
 Everything else (TMDB API key, the list of allowed GitHub usernames, the
@@ -121,9 +125,28 @@ Query params:
 
 - `limit` — only return the last N ratings (e.g. `/api/ratings?limit=10`).
 - `mediaType` — `movie` or `tv`.
+- `since` — only return ratings whose `updatedAt` is after this ISO
+  timestamp (e.g. `/api/ratings?since=2026-08-01T00:00:00.000Z`). Useful for
+  a plugin/cron job that polls periodically and only wants new or changed
+  entries — save the previous response's `generatedAt` and pass it as
+  `since` on the next request.
+
+The response includes `Access-Control-Allow-Origin: *`, so it can be fetched
+directly from browser JS on another site (a blog, a static site build step,
+etc.), not just from a server. Each item's `slug` is stable for a given
+title/TMDB id/season, so it's safe to use as the filename/identifier when a
+plugin turns a rating into its own markdown file elsewhere.
 
 Consume this feed from a static site, RSS generator, or anything else that
 can parse JSON — that part is entirely up to you.
+
+## Bookmarklet
+
+**/admin/bookmarklet** (once signed in) has a draggable "Rate on Locus" link.
+Drag it to your bookmarks bar, then click it from any TMDB movie/show/season
+page: it pops up a small **/admin/new** window pre-filled with that page's
+link (and previews the title/poster), so you just pick a rating and save.
+Saving in the popup closes the window automatically instead of redirecting.
 
 ## Data format
 

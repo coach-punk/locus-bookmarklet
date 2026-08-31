@@ -7,6 +7,7 @@ const updateSchema = z.object({
   tmdbApiKey: z.string().optional(),
   allowedGithubUsers: z.array(z.string()).optional(),
   adminToken: z.string().min(8).optional(),
+  starDisplay: z.enum(["text", "css"]).optional(),
 });
 
 export async function GET() {
@@ -15,6 +16,7 @@ export async function GET() {
     tmdbApiKey: config.tmdbApiKey,
     allowedGithubUsers: config.allowedGithubUsers,
     hasAdminToken: Boolean(config.adminTokenHash),
+    starDisplay: config.starDisplay,
   });
 }
 
@@ -39,5 +41,6 @@ export async function PUT(request: Request) {
     tmdbApiKey: config.tmdbApiKey,
     allowedGithubUsers: config.allowedGithubUsers,
     hasAdminToken: Boolean(config.adminTokenHash),
+    starDisplay: config.starDisplay,
   });
 }

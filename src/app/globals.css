@@ -24,3 +24,27 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Default look for the "custom CSS spans" star display mode (see Settings).
+   Override .star-filled / .star-empty in your own CSS to restyle ratings. */
+.stars {
+  display: inline-flex;
+  gap: 0.1em;
+}
+
+.stars .star::before {
+  content: "\2605";
+}
+
+.stars .star-empty::before {
+  content: "\2606";
+}
+
+.stars .star-filled {
+  color: #f5b301;
+}
+
+.stars .star-empty {
+  color: #a3a3a3;
+}
+

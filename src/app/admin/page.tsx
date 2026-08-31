@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { listRatings } from "@/lib/ratings";
+import { readConfig } from "@/lib/config";
 import { DeleteRatingButton } from "@/components/DeleteRatingButton";
+import { Stars } from "@/components/Stars";
 
 export default async function AdminDashboardPage() {
-  const ratings = await listRatings();
+  const [ratings, config] = await Promise.all([listRatings(), readConfig()]);
   ratings.sort((a, b) => b.ratedAt.localeCompare(a.ratedAt));
 
   return (
@@ -33,8 +35,8 @@ export default async function AdminDashboardPage() {
               <div>
                 <p className="font-medium">
                   {r.title}{" "}
-                  <span className="ml-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200">
-                    {r.rating}
+                  <span className="ml-2 inline-flex h-6 items-center justify-center rounded-full bg-indigo-100 px-2 text-xs font-semibold text-amber-600 dark:bg-indigo-900 dark:text-amber-300">
+                    <Stars rating={r.rating} mode={config.starDisplay} />
                   </span>
                 </p>
                 <p className="text-xs text-neutral-500">

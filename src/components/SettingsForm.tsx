@@ -7,6 +7,7 @@ export function SettingsForm() {
   const [allowedGithubUsers, setAllowedGithubUsers] = useState("");
   const [adminToken, setAdminToken] = useState("");
   const [hasAdminToken, setHasAdminToken] = useState(false);
+  const [starDisplay, setStarDisplay] = useState<"text" | "css">("text");
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -17,6 +18,7 @@ export function SettingsForm() {
         setTmdbApiKey(data.tmdbApiKey ?? "");
         setAllowedGithubUsers((data.allowedGithubUsers ?? []).join(", "));
         setHasAdminToken(Boolean(data.hasAdminToken));
+        setStarDisplay(data.starDisplay === "css" ? "css" : "text");
       });
   }, []);
 
@@ -30,6 +32,7 @@ export function SettingsForm() {
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean),
+      starDisplay,
     };
     if (adminToken) payload.adminToken = adminToken;
 
@@ -91,6 +94,26 @@ export function SettingsForm() {
         />
         <p className="mt-1 text-xs text-neutral-500">
           Comma-separated. Only these GitHub accounts can sign in (requires GITHUB_ID/GITHUB_SECRET env vars).
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1" htmlFor="starDisplay">
+          Star display
+        </label>
+        <select
+          id="starDisplay"
+          value={starDisplay}
+          onChange={(e) => setStarDisplay(e.target.value === "css" ? "css" : "text")}
+          className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+        >
+          <option value="text">Plain text stars (★★★☆)</option>
+          <option value="css">Custom CSS spans (style with your own CSS)</option>
+        </select>
+        <p className="mt-1 text-xs text-neutral-500">
+          &quot;Custom CSS spans&quot; renders each star as a{" "}
+          <code>.star</code> span (with <code>.star-filled</code>/<code>.star-empty</code>) inside a{" "}
+          <code>.stars</code> wrapper, so you can restyle ratings with your own CSS.
         </p>
       </div>
 

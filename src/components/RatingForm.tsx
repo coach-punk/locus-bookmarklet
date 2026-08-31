@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RatingSelector } from "./RatingSelector";
 
 interface RatingFormProps {
@@ -13,6 +13,10 @@ interface RatingFormProps {
     notes: string;
     title: string;
   };
+  /** Prefills the link field, e.g. from the bookmarklet's ?link= param. */
+  initialLink?: string;
+  /** Closes the window on save instead of redirecting (bookmarklet popup). */
+  popup?: boolean;
 }
 
 interface PreviewState {
@@ -22,9 +26,9 @@ interface PreviewState {
   overview: string;
 }
 
-export function RatingForm({ mode, slug, initial }: RatingFormProps) {
+export function RatingForm({ mode, slug, initial, initialLink, popup }: RatingFormProps) {
   const router = useRouter();
-  const [link, setLink] = useState(initial?.tmdbUrl ?? "");
+  const [link, setLink] = useState(initial?.tmdbUrl ?? initialLink ?? "");
   const [rating, setRating] = useState(initial?.rating ?? 4);
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [preview, setPreview] = useState<PreviewState | null>(null);
@@ -58,6 +62,15 @@ export function RatingForm({ mode, slug, initial }: RatingFormProps) {
     }
   }
 
+  // Bookmarklet flow: auto-preview the prefilled link so the popup shows
+  // title/poster right away without an extra click.
+  useEffect(() => {
+    if (!initialLink) return;
+    const timer = setTimeout(() => handlePreview(), 0);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialLink]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -77,6 +90,10 @@ export function RatingForm({ mode, slug, initial }: RatingFormProps) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Something went wrong.");
+      if (popup) {
+        window.close();
+        return;
+      }
       router.push("/admin");
       router.refresh();
     } catch (err) {
@@ -157,7 +174,13 @@ export function RatingForm({ mode, slug, initial }: RatingFormProps) {
         disabled={loading}
         className="rounded bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
       >
-        {loading ? "Saving…" : mode === "create" ? "Add rating" : "Save changes"}
+        {loading
+          ? "Saving…"
+          : popup
+          ? "Save & close"
+          : mode === "create"
+          ? "Add rating"
+          : "Save changes"}
       </button>
     </form>
   );

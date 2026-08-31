@@ -23,7 +23,19 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <div className="flex-1">{children}</div>
+        <footer className="border-t border-neutral-200 py-4 text-center text-xs text-neutral-500 dark:border-neutral-800">
+          <a
+            href="https://github.com/coach-punk/locus-movies"
+            target="_blank"
+            rel="noreferrer"
+            className="hover:underline"
+          >
+            Locus Movies on GitHub
+          </a>
+        </footer>
+      </body>
     </html>
   );
 }
