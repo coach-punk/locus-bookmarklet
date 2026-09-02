@@ -30,7 +30,7 @@ Locus TMDB Reviewer is built as a **pure client-side static web application**:
 - **Zero Backend**: Runs on GitHub Pages, Cloudflare Pages, any web server, or locally on your machine.
 - **100% Private**: Your TMDB API key and custom templates are stored securely in your browser's `localStorage`—they never touch an intermediary server.
 - **1-Click Bookmarklet**: Click your bookmarklet while browsing TMDB to immediately pull metadata into your review template.
-- **Sticky Footer & TMDB Compliant**: Includes an unobtrusive footer featuring project links and official TMDB API attribution.
+- **TMDB Compliant**: Includes an unobtrusive footer featuring project links and official TMDB API attribution.
 
 ---
 
