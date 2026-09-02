@@ -1,0 +1,27 @@
+---
+title: <title>
+description: <original_title>
+date: <release_date>
+category: reviews
+tags:
+    - movies
+    - reviews
+trailer: <youtubeUrl>
+rating: <rating_num>
+
+
+---
+
+## <user_rating>
+
+### <tagline>
+
+![Poster](<posterUrl>)
+
+**Overview**
+
+ > <overview>
+
+**TMDB**: <tmdbUrl>
+
+**Notes**: <user_notes>

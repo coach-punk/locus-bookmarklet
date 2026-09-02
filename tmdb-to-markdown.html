@@ -1,0 +1,1828 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Locus TMDB Reviewer — Markdown Review Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+      --surface: rgba(30, 41, 59, 0.7);
+      --surface-border: rgba(255, 255, 255, 0.1);
+      --surface-hover: rgba(51, 65, 85, 0.8);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-glow: rgba(99, 102, 241, 0.35);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      padding: 32px 16px 85px 16px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      line-height: 1.5;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 960px;
+      position: relative;
+    }
+
+    /* Top Navigation / Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 20px;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Settings Wheel Button */
+    .settings-btn {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      color: var(--text-main);
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    }
+
+    .settings-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--accent);
+      transform: rotate(30deg);
+    }
+
+    .settings-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .status-dot {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid #0f172a;
+    }
+
+    .status-dot.configured {
+      background: var(--success);
+    }
+
+    .status-dot.unconfigured {
+      background: var(--warning);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+      }
+    }
+
+    /* Banner for Missing Key */
+    .api-banner {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .api-banner.hidden {
+      display: none;
+    }
+
+    .api-banner span {
+      font-size: 14px;
+      color: #fef08a;
+    }
+
+    .btn-banner {
+      background: var(--warning);
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+
+    /* Main Grid Layout */
+    .app-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    @media (min-width: 900px) {
+      .app-layout {
+        grid-template-columns: 420px 1fr;
+      }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      letter-spacing: 0.01em;
+    }
+
+    .label-hint {
+      font-weight: 400;
+      color: #64748b;
+      margin-left: 4px;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    textarea,
+    select {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .row>* {
+      flex: 1;
+    }
+
+    /* Star rating widget */
+    .rating-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .star-picker {
+      display: flex;
+      gap: 4px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      align-items: center;
+    }
+
+    .star-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #475569;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 2px;
+      transition: color 0.15s;
+    }
+
+    .star-btn.active {
+      color: #fbbf24;
+    }
+
+    .star-btn:hover {
+      color: #f59e0b;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 12px var(--accent-glow);
+      width: 100%;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: var(--surface-border);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Preview Section */
+    .preview-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .filename-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      background: rgba(15, 23, 42, 0.8);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--surface-border);
+      color: #38bdf8;
+      max-width: 320px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .preview-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    pre#output {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      background: rgba(10, 15, 29, 0.9);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow: auto;
+      flex: 1;
+      min-height: 380px;
+      max-height: 650px;
+    }
+
+    /* Bookmarklet & Helper Bar */
+    .helper-bar {
+      margin-top: 24px;
+      padding: 12px 16px;
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .bookmarklet-chip {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: grab;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .bookmarklet-chip:active {
+      cursor: grabbing;
+    }
+
+    /* Modal / Dialog (Settings) */
+    dialog {
+      margin: auto;
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius);
+      color: var(--text-main);
+      padding: 24px;
+      max-width: 580px;
+      width: 92%;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    }
+
+    dialog::backdrop {
+      background: rgba(15, 23, 42, 0.75);
+      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--surface-border);
+      padding-bottom: 12px;
+    }
+
+    .modal-header h2 {
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+      padding: 4px;
+    }
+
+    .modal-close:hover {
+      color: var(--text-main);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--surface-border);
+    }
+
+    .template-badge {
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(99, 102, 241, 0.2);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .template-editor-box {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      height: 160px;
+      margin-top: 8px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      border: 1px solid var(--accent);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 9999;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Modal Tabs */
+    .modal-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--surface-border);
+      padding-bottom: 8px;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      background: var(--accent);
+      box-shadow: 0 2px 8px var(--accent-glow);
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    .setup-guide-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #cbd5e1;
+      margin-top: 14px;
+    }
+
+    .setup-guide-card h4 {
+      color: var(--text-main);
+      font-size: 13px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .setup-guide-card ul {
+      padding-left: 18px;
+      margin-bottom: 10px;
+    }
+
+    .server-callout {
+      background: rgba(99, 102, 241, 0.12);
+      border-left: 3px solid var(--accent);
+      padding: 10px 12px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+
+    .code-pill {
+      background: #090d16;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #38bdf8;
+      display: inline-block;
+      margin: 2px 0;
+    }
+
+    /* Helper Utilities replacing inline styles */
+    .brand-subtitle { font-size: 13px; color: var(--text-muted); }
+    .input-rating-num { width: 70px; }
+    .helper-bar-content { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .btn-guide { padding: 6px 12px; font-size: 12px; }
+    .btn-toggle-key { flex: 0 0 70px; }
+    .btn-autodetect { flex: 0 0 100px; }
+    .btn-copy-code { padding: 6px 12px; font-size: 12px; }
+    .btn-template-action { padding: 4px 8px; font-size: 12px; }
+    .btn-save-settings { width: auto; }
+    .btn-clear-key { color: var(--danger); }
+    .bookmarklet-actions-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .template-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .template-actions-group { display: flex; gap: 6px; }
+    .form-group-spaced { margin-top: 14px; }
+    .label-tight { margin-bottom: 0; }
+    .editor-bookmarklet { height: 65px; font-size: 11px; margin-top: 0; }
+    .hint-apikey { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+    .hint-generator { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .hint-template { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .link-accent { color: #818cf8; }
+    .link-sky { color: #38bdf8; }
+    .highlight-purple { color: #a5b4fc; font-weight: 600; }
+
+    /* Rebranding Elements */
+    .brand-title-wrap { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+    .brand-tag {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: rgba(99, 102, 241, 0.18);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      color: #a5b4fc;
+      padding: 2px 8px;
+      border-radius: 9999px;
+    }
+
+    .header-icon-link {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      color: var(--text-muted);
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    }
+    .header-icon-link:hover {
+      color: var(--text-main);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    /* Sticky Footer */
+    .app-sticky-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 90;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 10px 24px;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .footer-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .footer-project-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: #f1f5f9;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 4px 10px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .footer-project-link:hover {
+      background: rgba(99, 102, 241, 0.25);
+      border-color: rgba(99, 102, 241, 0.45);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .footer-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(99, 102, 241, 0.25);
+      color: #c7d2fe;
+      letter-spacing: 0.03em;
+    }
+
+    .footer-sep {
+      color: rgba(255, 255, 255, 0.2);
+      font-size: 12px;
+    }
+
+    .footer-sub {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .footer-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .tmdb-badge-link {
+      display: inline-flex;
+      align-items: center;
+      opacity: 0.9;
+      transition: opacity 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .tmdb-badge-link:hover {
+      opacity: 1;
+    }
+
+    .tmdb-logo-svg {
+      height: 16px;
+      width: auto;
+      display: block;
+    }
+
+    .footer-disclaimer {
+      font-size: 11px;
+      color: #94a3b8;
+      max-width: 440px;
+      line-height: 1.35;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding-bottom: 125px;
+      }
+      .footer-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .footer-disclaimer {
+        font-size: 10px;
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="brand-logo">L</div>
+        <div>
+          <div class="brand-title-wrap">
+            <h1>Locus</h1>
+            <span class="brand-tag">TMDB Reviewer</span>
+          </div>
+          <p class="brand-subtitle">Self-hosted review generator &amp; 1-click browser bookmarklet</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a href="https://github.com/coach-punk/locus-bookmarklet" target="_blank" rel="noopener noreferrer" class="header-icon-link" title="View Source on GitHub" aria-label="GitHub Repository" id="headerRepoLink">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+        </a>
+        <button id="openSettings" class="settings-btn" title="Settings & TMDB API Key" aria-label="Settings">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+            </path>
+          </svg>
+          <span id="keyStatusDot" class="status-dot unconfigured"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Missing Key Alert Banner -->
+    <div id="apiBanner" class="api-banner">
+      <span>⚠️ <strong>TMDB API Key missing.</strong> Configure your API key or proxy to enable metadata
+        extraction.</span>
+      <button id="bannerSettingsBtn" class="btn-banner">Configure Now</button>
+    </div>
+
+    <!-- Main Workspace -->
+    <div class="app-layout">
+      <!-- Input Panel -->
+      <div class="card">
+        <div class="card-title">
+          <span>Metadata Source</span>
+          <span id="activeTemplateBadge" class="template-badge">ttm-template</span>
+        </div>
+
+        <form id="generatorForm" onsubmit="return false;">
+          <div class="form-group">
+            <label for="url">TMDB URL</label>
+            <input id="url" type="text" placeholder="https://www.themoviedb.org/movie/271110..." required
+              autocomplete="off" />
+          </div>
+
+          <div class="form-group">
+            <label for="slug">
+              Slug
+              <span class="label-hint">(used for file name & &lt;slug&gt;)</span>
+            </label>
+            <input id="slug" type="text" placeholder="e.g. captain-america-civil-war-movie-271110" autocomplete="off" />
+          </div>
+
+          <div class="form-group">
+            <div class="row">
+              <div>
+                <label for="rating">Rating (0-5)</label>
+                <div class="rating-row">
+                  <input id="rating" type="number" min="0" max="5" step="1" placeholder="4" class="input-rating-num" />
+                  <div id="starPicker" class="star-picker" title="Click to rate">
+                    <button type="button" class="star-btn" data-val="1">★</button>
+                    <button type="button" class="star-btn" data-val="2">★</button>
+                    <button type="button" class="star-btn" data-val="3">★</button>
+                    <button type="button" class="star-btn" data-val="4">★</button>
+                    <button type="button" class="star-btn" data-val="5">★</button>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label for="season">Season <span class="label-hint">(TV only)</span></label>
+                <input id="season" type="text" placeholder="e.g. 1" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="notes">Notes <span class="label-hint">(optional)</span></label>
+            <textarea id="notes" rows="3" placeholder="Add personal notes or quick review..."></textarea>
+          </div>
+
+          <button id="generate" type="button" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            Assemble Markdown
+          </button>
+        </form>
+      </div>
+
+      <!-- Preview Panel -->
+      <div class="card preview-container">
+        <div class="preview-header">
+          <div class="filename-pill" id="filenameDisplay" title="Output filename">&lt;premiereDate&gt;-&lt;slug&gt;.md
+          </div>
+          <div class="preview-actions">
+            <button id="copy" class="btn btn-secondary" disabled>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span>Copy</span>
+            </button>
+            <button id="download" class="btn btn-secondary" disabled>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Download .md</span>
+            </button>
+          </div>
+        </div>
+        <pre id="output">Paste a TMDB link on the left and click "Assemble Markdown" to preview your template.</pre>
+      </div>
+    </div>
+
+    <!-- Bookmarklet Helper Strip -->
+    <div class="helper-bar">
+      <div class="helper-bar-content">
+        <span>💡 <strong>Quick Access:</strong> Drag this button to your bookmarks bar to review TMDB pages in one
+          click:</span>
+        <a id="bookmarkletLink" class="bookmarklet-chip" href="javascript:void(0)" title="Drag to your Bookmarks Bar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          </svg>
+          <span>Locus TMDB Reviewer</span>
+        </a>
+      </div>
+      <button id="openBookmarkletHelp" type="button" class="btn btn-secondary btn-guide">
+        ⚙️ Bookmarklet Setup & Guide
+      </button>
+    </div>
+  </div>
+
+  <!-- Settings Dialog -->
+  <dialog id="settingsDialog">
+    <div class="modal-header">
+      <h2>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path
+            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+          </path>
+        </svg>
+        Preferences & Setup
+      </h2>
+      <button id="closeSettingsBtn" class="modal-close" aria-label="Close">&times;</button>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="modal-tabs">
+      <button type="button" class="tab-btn active" data-tab="apikey">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 2l-2 2m-1.5 1.5L14 9l-3 3-2-2-4 4 2 2-4 4 2 2 4-4 2 2 3-3 3.5-3.5M19 5l2 2" />
+        </svg>
+        <span>API Key</span>
+      </button>
+      <button type="button" class="tab-btn" data-tab="bookmarklet">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+        </svg>
+        <span>Bookmarklet</span>
+      </button>
+      <button type="button" class="tab-btn" data-tab="template">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+        </svg>
+        <span>Template</span>
+      </button>
+    </div>
+
+    <!-- Tab 1: API Key -->
+    <div class="tab-pane active" id="tab-apikey">
+      <div class="form-group">
+        <label for="settingsApiKey">TMDB API Key or Proxy Endpoint</label>
+        <div class="row">
+          <input id="settingsApiKey" type="password" placeholder="Paste your v3 API key or proxy URL" />
+          <button id="toggleApiKeyVisibility" type="button" class="btn btn-secondary btn-toggle-key">Show</button>
+        </div>
+        <p class="hint-apikey">
+          Stored securely in your local browser storage. You can obtain a free API key at <a
+            href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer"
+            class="link-accent">themoviedb.org/settings/api</a>.
+        </p>
+      </div>
+    </div>
+
+    <!-- Tab 2: Bookmarklet Setup -->
+    <div class="tab-pane" id="tab-bookmarklet">
+      <div id="fileProtocolNotice" style="display:none; background:rgba(239, 68, 68, 0.12); border:1px solid rgba(239, 68, 68, 0.35); border-radius:8px; padding:12px 14px; margin-bottom:16px; font-size:13px; color:#fca5a5; line-height:1.5;">
+        <strong style="color:#f87171;">⚠️ Notice for Microsoft Edge & Chrome Users:</strong><br />
+        You are currently viewing this file via <code>file:///</code>. Due to browser security restrictions, Edge and Chrome strictly prohibit scripts on external websites (like TMDB) from opening <code>file://</code> URLs. Bookmarklets created with a <code>file://</code> URL will fail silently.<br /><br />
+        <strong>To make the bookmarklet work in Edge:</strong>
+        <ol style="margin:6px 0 0 18px; padding:0;">
+          <li>Run <code style="background:rgba(0,0,0,0.3); padding:2px 6px; border-radius:4px; color:#fff;">python3 -m http.server 8000</code> in your terminal.</li>
+          <li>Set the Target URL below to <strong><code>http://localhost:8000/tmdb-to-markdown.html</code></strong>.</li>
+        </ol>
+      </div>
+
+      <div class="form-group">
+        <label for="generatorUrlInput">Generator Target URL</label>
+        <div class="row">
+          <input id="generatorUrlInput" type="text"
+            placeholder="file:///... or http://localhost:8000/tmdb-to-markdown.html" />
+          <button id="resetUrlBtn" type="button" class="btn btn-secondary btn-autodetect">Auto-Detect</button>
+        </div>
+        <p class="hint-generator">
+          The address of this generator page that the bookmarklet will open when clicked on TMDB.
+        </p>
+      </div>
+
+      <div class="form-group form-group-spaced">
+        <label>Your Bookmarklet</label>
+        <div class="bookmarklet-actions-row">
+          <a id="modalBookmarkletLink" class="bookmarklet-chip" href="javascript:void(0)" title="Drag to Bookmarks Bar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+            </svg>
+            <span>Locus TMDB Reviewer</span>
+          </a>
+          <button id="copyBookmarkletCodeBtn" type="button" class="btn btn-secondary btn-copy-code">
+            Copy Bookmarklet Code
+          </button>
+        </div>
+        <textarea id="bookmarkletCodePreview" class="template-editor-box editor-bookmarklet" readonly></textarea>
+      </div>
+
+      <!-- Setup Guide Card -->
+      <div class="setup-guide-card">
+        <h4>📖 How to Set Up Your Bookmarklet</h4>
+        <ul>
+          <li><strong>Option 1 (Drag & Drop):</strong> Drag the purple <span class="highlight-purple">Locus TMDB Reviewer</span> button above directly onto your browser's Bookmarks Bar.</li>
+          <li><strong>Option 2 (Manual / Safari):</strong> Click <em>Copy Bookmarklet Code</em>. Create a new bookmark
+            for any page, edit the bookmark, and paste the code into the URL field.</li>
+        </ul>
+
+        <div class="server-callout">
+          <strong>💻 Serving from a Local Folder (<code>file:///</code>) vs. Web Server:</strong><br />
+          If you open this directly from a folder (e.g. <code>file:///Users/.../tmdb-to-markdown.html</code>), note that
+          some browsers (like Safari and Chrome) restrict scripts on <code>themoviedb.org</code> from opening local
+          <code>file:///</code> URLs due to sandbox security.<br /><br />
+          <strong>💡 Recommended:</strong> Run a lightweight local server in this directory:
+          <div class="code-pill">python3 -m http.server 8000</div>
+          Then open <a href="http://localhost:8000/tmdb-to-markdown.html" target="_blank" rel="noopener noreferrer"
+            class="link-sky">http://localhost:8000/tmdb-to-markdown.html</a>, click <strong>Auto-Detect</strong>
+          above, and save. The bookmarklet will work seamlessly across all browsers!
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: Template -->
+    <div class="tab-pane" id="tab-template">
+      <div class="form-group">
+        <div class="template-header-row">
+          <label for="templateEditor" class="label-tight">Markdown Template (from ttm-template)</label>
+          <div class="template-actions-group">
+            <button id="reloadTemplateBtn" type="button" class="btn btn-secondary btn-template-action"
+              title="Reload from ttm-template folder">Reload</button>
+            <button id="resetTemplateBtn" type="button" class="btn btn-secondary btn-template-action"
+              title="Reset to standard template">Reset</button>
+          </div>
+        </div>
+        <textarea id="templateEditor" class="template-editor-box" spellcheck="false"></textarea>
+        <p class="hint-template">
+          Supported tags: <code>&lt;title&gt;</code>, <code>&lt;original_title&gt;</code>,
+          <code>&lt;description&gt;</code>, <code>&lt;release_date&gt;</code>, <code>&lt;slug&gt;</code>,
+          <code>&lt;user_rating&gt;</code>, <code>&lt;user_notes&gt;</code>, <code>&lt;tagline&gt;</code>,
+          <code>&lt;posterUrl&gt;</code>, <code>&lt;overview&gt;</code>, <code>&lt;tmdbUrl&gt;</code>, etc.
+        </p>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button id="clearSettingsBtn" type="button" class="btn btn-secondary btn-clear-key">Clear Stored
+        Key</button>
+      <button id="saveSettingsBtn" type="button" class="btn btn-primary btn-save-settings">Save & Apply</button>
+    </div>
+  </dialog>
+
+  <!-- Toast Alert -->
+  <div id="toast" class="toast">Action completed</div>
+
+  <!-- Sticky Footer -->
+  <footer class="app-sticky-footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <a href="https://github.com/coach-punk/locus-bookmarklet" target="_blank" rel="noopener noreferrer" class="footer-project-link" id="footerRepoLink" title="View Locus on GitHub">
+          <svg class="footer-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span class="footer-project-title">Locus TMDB Reviewer</span>
+          <span class="footer-badge">MIT</span>
+        </a>
+        <span class="footer-sep">•</span>
+        <span class="footer-sub">TMDB to Markdown Generator</span>
+      </div>
+
+      <div class="footer-right">
+        <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer" class="tmdb-badge-link" title="Powered by The Movie Database (TMDB)">
+          <svg class="tmdb-logo-svg" viewBox="0 0 185.04 133.4" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="tmdb-grad" y1="66.7" x2="185.04" y2="66.7" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#90cea1"/>
+                <stop offset="0.56" stop-color="#3cbec9"/>
+                <stop offset="1" stop-color="#00b3e5"/>
+              </linearGradient>
+            </defs>
+            <path fill="url(#tmdb-grad)" d="M51.06,66.7h0A17.67,17.67,0,0,1,68.73,49h-.1A17.67,17.67,0,0,1,86.3,66.7h0A17.67,17.67,0,0,1,68.63,84.37h.1A17.67,17.67,0,0,1,51.06,66.7Zm82.67-31.33h32.9A17.67,17.67,0,0,0,184.3,17.7h0A17.67,17.67,0,0,0,166.63,0h-32.9A17.67,17.67,0,0,0,116.06,17.7h0A17.67,17.67,0,0,0,133.73,35.37Zm-113,98h63.9A17.67,17.67,0,0,0,102.3,115.7h0A17.67,17.67,0,0,0,84.63,98H20.73A17.67,17.67,0,0,0,3.06,115.7h0A17.67,17.67,0,0,0,20.73,133.37Zm83.92-49h6.25L125.5,49h-8.35l-8.9,23.2h-.1L99.4,49H90.5Zm32.45,0h7.8V49h-7.8Zm22.2,0h24.95V77.2H167.1V70h15.35V62.8H167.1V56.2h16.25V49h-24ZM10.1,35.4h7.8V6.9H28V0H0V6.9H10.1ZM39,35.4h7.8V20.1H61.9V35.4h7.8V0H61.9V13.2H46.75V0H39Zm41.25,0h25V28.2H88V21h15.35V13.8H88V7.2h16.25V0h-24Zm-79,49H9V57.25h.1l9,27.15H24l9.3-27.15h.1V84.4h7.8V49H29.45l-8.2,23.1h-.1L13,49H1.2Zm112.09,49H126a24.59,24.59,0,0,0,7.56-1.15,19.52,19.52,0,0,0,6.35-3.37,16.37,16.37,0,0,0,4.37-5.5A16.91,16.91,0,0,0,146,115.8a18.5,18.5,0,0,0-1.68-8.25,15.1,15.1,0,0,0-4.52-5.53A18.55,18.55,0,0,0,133.07,99,33.54,33.54,0,0,0,125,98H113.29Zm7.81-28.2h4.6a17.43,17.43,0,0,1,4.67.62,11.68,11.68,0,0,1,3.88,1.88,9,9,0,0,1,2.62,3.18,9.87,9.87,0,0,1,1,4.52,11.92,11.92,0,0,1-1,5.08,8.69,8.69,0,0,1-2.67,3.34,10.87,10.87,0,0,1-4,1.83,21.57,21.57,0,0,1-5,.55H121.1Zm36.14,28.2h14.5a23.11,23.11,0,0,0,4.73-.5,13.38,13.38,0,0,0,4.27-1.65,9.42,9.42,0,0,0,3.1-3,8.52,8.52,0,0,0,1.2-4.68,9.16,9.16,0,0,0-.55-3.2,7.79,7.79,0,0,0-1.57-2.62,8.38,8.38,0,0,0-2.45-1.85,10,10,0,0,0-3.18-1v-.1a9.28,9.28,0,0,0,4.43-2.82,7.42,7.42,0,0,0,1.67-5,8.34,8.34,0,0,0-1.15-4.65,7.88,7.88,0,0,0-3-2.73,12.9,12.9,0,0,0-4.17-1.3,34.42,34.42,0,0,0-4.63-.32h-13.2Zm7.8-28.8h5.3a10.79,10.79,0,0,1,1.85.17,5.77,5.77,0,0,1,1.7.58,3.33,3.33,0,0,1,1.23,1.13,3.22,3.22,0,0,1,.47,1.82,3.63,3.63,0,0,1-.42,1.8,3.34,3.34,0,0,1-1.13,1.2,4.78,4.78,0,0,1-1.57.65,8.16,8.16,0,0,1-1.78.2H165Zm0,14.15h5.9a15.12,15.12,0,0,1,2.05.15,7.83,7.83,0,0,1,2,.55,4,4,0,0,1,1.58,1.17,3.13,3.13,0,0,1,.62,2,3.71,3.71,0,0,1-.47,1.95,4,4,0,0,1-1.23,1.3,4.78,4.78,0,0,1-1.67.7,8.91,8.91,0,0,1-1.83.2h-7Z"/>
+          </svg>
+        </a>
+        <span class="footer-disclaimer">
+          This product uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.
+        </span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (async function () {
+      const el = id => document.getElementById(id);
+      const STORAGE_API_KEY = 'tmdb_api_key';
+      const STORAGE_TEMPLATE_KEY = 'tmdb_active_template';
+      const TEMPLATE_PATHS = [
+        './ttm-template/<premiereDate>-<slug>.txt',
+        './ttm-template/<premiereDate>-<slug>.md'
+      ];
+
+      // Standard fallback template matching ttm-template/<premiereDate>-<slug>.txt
+      const DEFAULT_TEMPLATE = `---
+title: <title>
+description: <original_title>
+date: <release_date>
+category: reviews
+tags:
+    - movies
+    - reviews
+trailer: <youtubeUrl>
+rating: <rating_num>
+
+---
+
+## <user_rating>
+
+### <tagline>
+
+![Poster](<posterUrl>)
+
+**Overview**
+
+ > <overview>
+
+**TMDB**: <tmdbUrl>
+
+**Notes**: <user_notes>
+`;
+
+      let activeTemplate = localStorage.getItem(STORAGE_TEMPLATE_KEY) || DEFAULT_TEMPLATE;
+      let lastFetchedData = null;
+
+      // Toast helper
+      function showToast(msg) {
+        const toast = el('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2600);
+      }
+
+      // Try to load template from ttm-template folder on startup (.txt or .md)
+      async function loadTemplateFromDisk() {
+        for (const path of TEMPLATE_PATHS) {
+          try {
+            const res = await fetch(path);
+            if (res.ok) {
+              const fetchedTpl = await res.text();
+              if (fetchedTpl && fetchedTpl.trim()) {
+                activeTemplate = fetchedTpl;
+                localStorage.setItem(STORAGE_TEMPLATE_KEY, activeTemplate);
+                el('templateEditor').value = activeTemplate;
+                return true;
+              }
+            }
+          } catch (e) {
+            // Fallback or file:// protocol CORS, try next or use stored activeTemplate
+          }
+        }
+        return false;
+      }
+
+      // Update status indicators & banner
+      function updateKeyStatusUI() {
+        const key = (localStorage.getItem(STORAGE_API_KEY) || '').trim();
+        const isConfigured = key.length > 0;
+        const dot = el('keyStatusDot');
+        const banner = el('apiBanner');
+
+        if (isConfigured) {
+          dot.className = 'status-dot configured';
+          dot.title = 'API Key Configured';
+          banner.classList.add('hidden');
+        } else {
+          dot.className = 'status-dot unconfigured';
+          dot.title = 'API Key Missing';
+          banner.classList.remove('hidden');
+        }
+      }
+
+      // Settings Modal
+      const settingsDialog = el('settingsDialog');
+      function openSettings(defaultTab = 'apikey') {
+        el('settingsApiKey').value = localStorage.getItem(STORAGE_API_KEY) || '';
+        el('templateEditor').value = activeTemplate;
+        updateBookmarkletUI();
+        switchSettingsTab(defaultTab);
+        settingsDialog.showModal();
+      }
+
+      function closeSettings() {
+        settingsDialog.close();
+      }
+
+      function switchSettingsTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.tab === tabName);
+        });
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+          pane.classList.toggle('active', pane.id === `tab-${tabName}`);
+        });
+      }
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchSettingsTab(btn.dataset.tab));
+      });
+
+      el('openSettings').addEventListener('click', () => openSettings('apikey'));
+      el('bannerSettingsBtn').addEventListener('click', () => openSettings('apikey'));
+      el('closeSettingsBtn').addEventListener('click', closeSettings);
+
+      if (el('openBookmarkletHelp')) {
+        el('openBookmarkletHelp').addEventListener('click', () => openSettings('bookmarklet'));
+      }
+
+      settingsDialog.addEventListener('click', (e) => {
+        // Light-dismiss only when clicking the backdrop itself (e.target === settingsDialog)
+        if (e.target === settingsDialog) {
+          const rect = settingsDialog.getBoundingClientRect();
+          const clickedBackdrop = (
+            e.clientX < rect.left ||
+            e.clientX > rect.right ||
+            e.clientY < rect.top ||
+            e.clientY > rect.bottom
+          );
+          if (clickedBackdrop) closeSettings();
+        }
+      });
+
+      el('toggleApiKeyVisibility').addEventListener('click', () => {
+        const input = el('settingsApiKey');
+        const isPwd = input.type === 'password';
+        input.type = isPwd ? 'text' : 'password';
+        el('toggleApiKeyVisibility').textContent = isPwd ? 'Hide' : 'Show';
+      });
+
+      el('saveSettingsBtn').addEventListener('click', () => {
+        const key = el('settingsApiKey').value.trim();
+        const tpl = el('templateEditor').value;
+        const genUrl = el('generatorUrlInput').value.trim();
+
+        if (key) {
+          localStorage.setItem(STORAGE_API_KEY, key);
+        } else {
+          localStorage.removeItem(STORAGE_API_KEY);
+        }
+
+        if (tpl && tpl.trim()) {
+          activeTemplate = tpl;
+          localStorage.setItem(STORAGE_TEMPLATE_KEY, activeTemplate);
+        }
+
+        if (genUrl && genUrl !== getDefaultGeneratorUrl()) {
+          localStorage.setItem(STORAGE_GENERATOR_URL_KEY, genUrl);
+        } else {
+          localStorage.removeItem(STORAGE_GENERATOR_URL_KEY);
+        }
+        updateBookmarkletUI();
+
+        updateKeyStatusUI();
+        closeSettings();
+        showToast('Settings saved successfully');
+
+        // Re-generate if we already have data loaded
+        if (lastFetchedData) {
+          renderMarkdownFromTemplate(lastFetchedData);
+        }
+      });
+
+      el('reloadTemplateBtn').addEventListener('click', async () => {
+        const loaded = await loadTemplateFromDisk();
+        if (loaded) {
+          el('templateEditor').value = activeTemplate;
+          showToast('Template reloaded from ttm-template folder');
+        } else {
+          showToast('Using local template (ttm-template folder read restricted)');
+        }
+      });
+
+      el('resetTemplateBtn').addEventListener('click', () => {
+        activeTemplate = DEFAULT_TEMPLATE;
+        el('templateEditor').value = activeTemplate;
+        localStorage.setItem(STORAGE_TEMPLATE_KEY, DEFAULT_TEMPLATE);
+        showToast('Template reset to default');
+      });
+
+      el('clearSettingsBtn').addEventListener('click', () => {
+        if (confirm('Clear saved API key from this browser?')) {
+          localStorage.removeItem(STORAGE_API_KEY);
+          el('settingsApiKey').value = '';
+          updateKeyStatusUI();
+          showToast('API Key cleared');
+        }
+      });
+
+      // Rating star picker
+      function setRating(val) {
+        el('rating').value = val || '';
+        const buttons = el('starPicker').querySelectorAll('.star-btn');
+        buttons.forEach(btn => {
+          const starVal = Number(btn.dataset.val);
+          btn.classList.toggle('active', starVal <= val);
+        });
+        if (lastFetchedData) {
+          lastFetchedData.userRating = val ? Number(val) : null;
+          renderMarkdownFromTemplate(lastFetchedData);
+        }
+      }
+
+      el('starPicker').addEventListener('click', (e) => {
+        const btn = e.target.closest('.star-btn');
+        if (!btn) return;
+        const val = Number(btn.dataset.val);
+        const current = Number(el('rating').value);
+        setRating(current === val ? 0 : val);
+      });
+
+      el('rating').addEventListener('input', (e) => {
+        setRating(Number(e.target.value));
+      });
+
+      // Slug generator and listener
+      function slugify(str) {
+        return String(str || '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '') || 'untitled';
+      }
+
+      el('slug').addEventListener('input', () => {
+        if (lastFetchedData) {
+          lastFetchedData.slug = el('slug').value.trim() || 'untitled';
+          renderMarkdownFromTemplate(lastFetchedData);
+        }
+      });
+
+      el('notes').addEventListener('input', () => {
+        if (lastFetchedData) {
+          lastFetchedData.notes = el('notes').value.trim();
+          renderMarkdownFromTemplate(lastFetchedData);
+        }
+      });
+
+      // URL Parsing
+      function parseTmdbUrl(url) {
+        try {
+          const u = new URL(url.trim());
+          const path = u.pathname.replace(/\/+$/, '');
+          const parts = path.split('/').filter(Boolean);
+          if (parts.length >= 2) {
+            const type = parts[0]; // movie or tv
+            const idPart = parts[1];
+            const id = idPart.split('-')[0];
+            let seasonNumber = null;
+            const seasonIndex = parts.indexOf('season');
+            if (seasonIndex >= 0 && parts.length > seasonIndex + 1) {
+              seasonNumber = parts[seasonIndex + 1];
+            }
+            return { type, id, seasonNumber, rawSlug: idPart.includes('-') ? idPart.replace(/^\d+-/, '') : '' };
+          }
+        } catch (e) { }
+        return null;
+      }
+
+      // Auto update slug when URL is changed
+      el('url').addEventListener('change', () => {
+        const parsed = parseTmdbUrl(el('url').value);
+        if (parsed && !el('slug').value.trim()) {
+          if (parsed.rawSlug) {
+            el('slug').value = `${slugify(parsed.rawSlug)}-${parsed.type}-${parsed.id}`;
+          }
+          if (parsed.seasonNumber && !el('season').value.trim()) {
+            el('season').value = parsed.seasonNumber;
+          }
+        }
+      });
+
+      // TMDB API Fetcher
+      async function tmdbFetch(apikeyOrProxy, path) {
+        if (!apikeyOrProxy) throw new Error('No API key or proxy configured. Click the settings gear in the top right to configure.');
+        if (/^https?:\/\//i.test(apikeyOrProxy)) {
+          const proxyUrl = new URL(apikeyOrProxy);
+          proxyUrl.searchParams.set('path', path);
+          const res = await fetch(proxyUrl.toString());
+          if (!res.ok) throw new Error('Proxy error: ' + res.status);
+          return res.json();
+        } else {
+          const url = 'https://api.themoviedb.org/3' + path + (path.includes('?') ? '&' : '?') + 'api_key=' + encodeURIComponent(apikeyOrProxy) + '&language=en-US';
+          const res = await fetch(url);
+          if (!res.ok) {
+            if (res.status === 401) throw new Error('Invalid TMDB API Key. Please check your key in settings.');
+            throw new Error('TMDB API error ' + res.status);
+          }
+          return res.json();
+        }
+      }
+
+      function starString(rating) {
+        if (rating === null || rating === undefined || rating === '') return '';
+        const full = Math.max(0, Math.min(5, Math.round(Number(rating))));
+        return '★'.repeat(full);
+      }
+
+      // Template Assembly Engine
+      // Template Assembly Engine
+      function assembleTemplate(template, data) {
+        let result = template;
+
+        // 1. Title & frontmatter safe escaping
+        const escapedTitle = (data.title || '').replace(/:/g, '&#58;');
+        result = result.replace(/<title>/g, escapedTitle);
+
+        // 2. Original title & description
+        const origTitle = data.originalTitle || data.title || '';
+        result = result.replace(/<original_title>/g, origTitle.replace(/:/g, '&#58;'));
+        result = result.replace(/<description>/g, data.overview || '');
+
+        // 3. Dates
+        result = result.replace(/<release_date>/g, data.releaseDate || 'undated');
+        result = result.replace(/<premiereDate>/g, data.releaseDate || 'undated');
+        result = result.replace(/<date>/g, data.releaseDate || 'undated');
+        result = result.replace(/<year>/g, (data.releaseDate || '').split('-')[0] || '');
+
+        // 4. Slug
+        result = result.replace(/<slug>/g, data.slug || 'untitled');
+
+        // 5. User Rating & Stars (<user_rating>, <user rating>, <stars>, <rating_num>)
+        const userStars = data.userRating ? starString(data.userRating) : '';
+        const userNum = data.userRating !== null && data.userRating !== undefined ? String(data.userRating) : '';
+        result = result.replace(/<user_rating>/g, userStars);
+        result = result.replace(/<user rating>/g, userStars);
+        result = result.replace(/<stars>/g, userStars);
+        result = result.replace(/<rating_num>/g, userNum);
+        result = result.replace(/<rating>/g, userStars || userNum);
+
+        // Legacy "## user rating" support
+        if (data.userRating) {
+          result = result.replace(/##\s*user rating/g, `## ${userStars}`);
+        } else {
+          result = result.replace(/##\s*user rating\r?\n?/g, '');
+        }
+
+        // 6. User Notes (<user_notes>, <user notes>, <notes>)
+        const notesContent = (data.notes || '').trim();
+        result = result.replace(/<user_notes>/g, notesContent);
+        result = result.replace(/<user notes>/g, notesContent);
+        result = result.replace(/<notes>/g, notesContent);
+
+        // Legacy Notes support: "**Notes**: user notes if any"
+        if (notesContent) {
+          result = result.replace(/\*\*Notes\*\*:\s*user notes if any/g, `**Notes**: ${notesContent}`);
+        } else {
+          result = result.replace(/\*\*Notes\*\*:\s*(?:user notes if any|<user_notes>|<user notes>|<notes>)?\r?\n?/g, '');
+        }
+
+        // If user rating heading line like "## " ended up empty (e.g. ## <user_rating> when no rating), remove it cleanly
+        result = result.replace(/^#+\s*\r?\n/gm, '');
+
+        // 7. Tagline
+        if (data.tagline) {
+          result = result.replace(/<tagline>/g, data.tagline);
+        } else {
+          // If tagline placeholder is on its own header line like ### <tagline>
+          result = result.replace(/###\s*<tagline>\r?\n?/g, '');
+          result = result.replace(/<tagline>/g, '');
+        }
+
+        // 8. Media URLs & Overview
+        result = result.replace(/<posterUrl>/g, data.posterUrl || '');
+        result = result.replace(/<backdropUrl>/g, data.backdropUrl || '');
+        result = result.replace(/<youtubeUrl>/g, data.youtubeUrl || '');
+        result = result.replace(/<overview>/g, data.overview || '');
+        result = result.replace(/<tmdbUrl>/g, data.tmdbUrl || '');
+
+        // 9. Extra standard metadata tags
+        result = result.replace(/<genres>/g, (data.genres || []).join(', '));
+        result = result.replace(/<voteAverage>/g, data.voteAverage !== null ? String(data.voteAverage) : '');
+        result = result.replace(/<vote_average>/g, data.voteAverage !== null ? String(data.voteAverage) : '');
+
+        // 10. Dynamic TMDB raw fields (e.g. <runtime>, <budget>, <status>, <imdb_id>, etc.)
+        if (data.raw && typeof data.raw === 'object') {
+          for (const [k, v] of Object.entries(data.raw)) {
+            if (v !== null && v !== undefined && typeof v !== 'object') {
+              const re = new RegExp(`<${k}>`, 'gi');
+              result = result.replace(re, String(v));
+            }
+          }
+        }
+
+        // Clean up excess blank lines (3+ into 2)
+        result = result.replace(/\n{3,}/g, '\n\n');
+
+        return result.trim() + '\n';
+      }
+
+      function renderMarkdownFromTemplate(data) {
+        const assembled = assembleTemplate(activeTemplate, data);
+        el('output').textContent = assembled;
+
+        const filename = `${data.releaseDate || 'undated'}-${data.slug}.md`;
+        el('filenameDisplay').textContent = filename;
+        el('filenameDisplay').title = filename;
+        el('download').dataset.filename = filename;
+
+        el('copy').disabled = false;
+        el('download').disabled = false;
+      }
+
+      // Main generate action
+      async function generate() {
+        const apiKey = (localStorage.getItem(STORAGE_API_KEY) || '').trim();
+        if (!apiKey) {
+          openSettings();
+          showToast('Please enter your TMDB API key first');
+          return;
+        }
+
+        const rawUrl = el('url').value.trim();
+        if (!rawUrl) {
+          showToast('Please enter a TMDB URL');
+          el('url').focus();
+          return;
+        }
+
+        const parsed = parseTmdbUrl(rawUrl);
+        if (!parsed) {
+          alert('Invalid TMDB URL format. Example: https://www.themoviedb.org/movie/271110-captain-america-civil-war');
+          return;
+        }
+
+        const genBtn = el('generate');
+        genBtn.disabled = true;
+        genBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> Fetching TMDB...`;
+
+        try {
+          const { type, id } = parsed;
+          const seasonOverride = el('season').value.trim();
+          const seasonNumber = seasonOverride || parsed.seasonNumber || null;
+
+          let tmdbData, title, originalTitle, overview, releaseDate, posterPath, backdropPath, voteAverage, genres, tagline;
+
+          let youtubeUrl = '';
+
+          if (type === 'movie') {
+            tmdbData = await tmdbFetch(apiKey, `/movie/${id}?append_to_response=videos`);
+            title = tmdbData.title || tmdbData.original_title || '';
+            originalTitle = tmdbData.original_title || title;
+            overview = tmdbData.overview || '';
+            releaseDate = tmdbData.release_date || '';
+            posterPath = tmdbData.poster_path;
+            backdropPath = tmdbData.backdrop_path;
+            voteAverage = tmdbData.vote_average ?? null;
+            genres = (tmdbData.genres || []).map(g => g.name);
+            tagline = tmdbData.tagline || '';
+
+            // Find official trailer or first YouTube video
+            const videos = (tmdbData.videos && tmdbData.videos.results) || [];
+            const trailer = videos.find(v => v.site === 'YouTube' && v.type === 'Trailer') ||
+                            videos.find(v => v.site === 'YouTube');
+            if (trailer && trailer.key) {
+              youtubeUrl = `https://www.youtube.com/watch?v=${trailer.key}`;
+            }
+          } else if (type === 'tv') {
+            tmdbData = await tmdbFetch(apiKey, `/tv/${id}?append_to_response=videos`);
+            title = tmdbData.name || tmdbData.original_name || '';
+            originalTitle = tmdbData.original_name || title;
+            overview = tmdbData.overview || '';
+            releaseDate = tmdbData.first_air_date || '';
+            posterPath = tmdbData.poster_path;
+            backdropPath = tmdbData.backdrop_path;
+            voteAverage = tmdbData.vote_average ?? null;
+            genres = (tmdbData.genres || []).map(g => g.name);
+            tagline = tmdbData.tagline || '';
+
+            const videos = (tmdbData.videos && tmdbData.videos.results) || [];
+            const trailer = videos.find(v => v.site === 'YouTube' && v.type === 'Trailer') ||
+                            videos.find(v => v.site === 'YouTube');
+            if (trailer && trailer.key) {
+              youtubeUrl = `https://www.youtube.com/watch?v=${trailer.key}`;
+            }
+
+            if (seasonNumber) {
+              try {
+                const sData = await tmdbFetch(apiKey, `/tv/${id}/season/${seasonNumber}`);
+                if (sData) {
+                  if (sData.overview) overview = sData.overview;
+                  if (sData.poster_path) posterPath = sData.poster_path;
+                  if (sData.name) title += ` (${sData.name})`;
+                  if (sData.air_date) releaseDate = sData.air_date;
+                }
+              } catch (e) { }
+            }
+          } else {
+            throw new Error('Unsupported TMDB media type: ' + type);
+          }
+
+          // Auto-generate slug if not entered by user
+          let currentSlug = el('slug').value.trim();
+          if (!currentSlug) {
+            currentSlug = `${slugify(title)}-${type}-${id}`;
+            el('slug').value = currentSlug;
+          }
+
+          const ratingVal = el('rating').value.trim();
+          const userRating = ratingVal !== '' ? Number(ratingVal) : null;
+          const notes = el('notes').value.trim();
+          const tmdbUrl = `https://www.themoviedb.org/${type}/${id}`;
+          const posterUrl = posterPath ? `https://image.tmdb.org/t/p/w500${posterPath}` : '';
+          const backdropUrl = backdropPath ? `https://image.tmdb.org/t/p/w1280${backdropPath}` : '';
+
+          lastFetchedData = {
+            type,
+            id,
+            title,
+            originalTitle,
+            overview,
+            releaseDate,
+            posterUrl,
+            backdropUrl,
+            voteAverage,
+            genres,
+            tagline,
+            youtubeUrl,
+            slug: currentSlug,
+            userRating,
+            notes,
+            tmdbUrl,
+            raw: tmdbData
+          };
+
+          renderMarkdownFromTemplate(lastFetchedData);
+          showToast('Markdown assembled with template!');
+        } catch (err) {
+          alert(err.message);
+        } finally {
+          genBtn.disabled = false;
+          genBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Assemble Markdown`;
+        }
+      }
+
+      el('generate').addEventListener('click', generate);
+
+      // Copy to clipboard
+      el('copy').addEventListener('click', async () => {
+        const text = el('output').textContent;
+        try {
+          await navigator.clipboard.writeText(text);
+          const copyBtn = el('copy');
+          const originalContent = copyBtn.innerHTML;
+          copyBtn.innerHTML = `<span>✓ Copied!</span>`;
+          setTimeout(() => { copyBtn.innerHTML = originalContent; }, 2000);
+          showToast('Markdown copied to clipboard!');
+        } catch (e) {
+          alert('Copy failed: ' + e.message);
+        }
+      });
+
+      // Download .md file
+      el('download').addEventListener('click', () => {
+        const text = el('output').textContent;
+        const filename = el('download').dataset.filename || 'review.md';
+        const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(a.href);
+        showToast(`Downloaded ${filename}`);
+      });
+
+      // Bookmarklet Manager
+      const STORAGE_GENERATOR_URL_KEY = 'tmdb_generator_url';
+
+      function getDefaultGeneratorUrl() {
+        return window.location.href.split('?')[0].split('#')[0];
+      }
+
+      function getActiveGeneratorUrl() {
+        return (localStorage.getItem(STORAGE_GENERATOR_URL_KEY) || '').trim() || getDefaultGeneratorUrl();
+      }
+
+      function generateBookmarkletCode(url) {
+        const cleanUrl = (url || getActiveGeneratorUrl()).trim();
+        return `javascript:(function(){const u=window.location.href;if(!u.includes('themoviedb.org')){alert('Please run this while on a TMDB page!');return;}const g='${cleanUrl}';if(g.startsWith('file:')){alert('Browser Security Error:\\n\\nMicrosoft Edge and Chrome block web pages from opening local file:// URLs.\\n\\nTo use this bookmarklet in Edge:\\n1. Run: python3 -m http.server 8000 in your project folder\\n2. Set your generator URL to http://localhost:8000/tmdb-to-markdown.html');return;}const w=window.open(g+'?url='+encodeURIComponent(u),'_blank');if(!w||w.closed||typeof w.closed==='undefined'){alert('Pop-up blocked or failed to open.\\n\\nPlease check Edge pop-up permissions for themoviedb.org or verify the generator URL:\\n'+g);}})();`;
+      }
+
+      function updateBookmarkletUI() {
+        const currentUrl = getActiveGeneratorUrl();
+        if (el('generatorUrlInput')) el('generatorUrlInput').value = currentUrl;
+        const code = generateBookmarkletCode(currentUrl);
+
+        if (el('bookmarkletLink')) el('bookmarkletLink').setAttribute('href', code);
+        if (el('modalBookmarkletLink')) el('modalBookmarkletLink').setAttribute('href', code);
+        if (el('bookmarkletCodePreview')) el('bookmarkletCodePreview').value = code;
+
+        if (el('fileProtocolNotice')) {
+          el('fileProtocolNotice').style.display = (window.location.protocol === 'file:' || currentUrl.startsWith('file:')) ? 'block' : 'none';
+        }
+      }
+
+      if (el('generatorUrlInput')) {
+        el('generatorUrlInput').addEventListener('input', () => {
+          const customUrl = el('generatorUrlInput').value.trim();
+          const code = generateBookmarkletCode(customUrl);
+          if (el('modalBookmarkletLink')) el('modalBookmarkletLink').setAttribute('href', code);
+          if (el('bookmarkletLink')) el('bookmarkletLink').setAttribute('href', code);
+          if (el('bookmarkletCodePreview')) el('bookmarkletCodePreview').value = code;
+          if (el('fileProtocolNotice')) {
+            el('fileProtocolNotice').style.display = (customUrl.startsWith('file:') || window.location.protocol === 'file:') ? 'block' : 'none';
+          }
+        });
+      }
+
+      if (el('resetUrlBtn')) {
+        el('resetUrlBtn').addEventListener('click', () => {
+          const autoUrl = getDefaultGeneratorUrl();
+          el('generatorUrlInput').value = autoUrl;
+          localStorage.removeItem(STORAGE_GENERATOR_URL_KEY);
+          updateBookmarkletUI();
+          showToast('Target URL reset to current page');
+        });
+      }
+
+      if (el('copyBookmarkletCodeBtn')) {
+        el('copyBookmarkletCodeBtn').addEventListener('click', async () => {
+          const code = el('bookmarkletCodePreview').value;
+          try {
+            await navigator.clipboard.writeText(code);
+            const btn = el('copyBookmarkletCodeBtn');
+            const orig = btn.textContent;
+            btn.textContent = '✓ Copied!';
+            setTimeout(() => { btn.textContent = orig; }, 2000);
+            showToast('Bookmarklet code copied to clipboard!');
+          } catch (e) {
+            alert('Copy failed: ' + e.message);
+          }
+        });
+      }
+
+      // Auto load ?url= parameter from query string or hash
+      async function handleUrlParams() {
+        const params = new URLSearchParams(window.location.search);
+        let targetUrl = params.get('url');
+
+        if (!targetUrl && window.location.hash) {
+          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          targetUrl = hashParams.get('url');
+        }
+
+        if (targetUrl) {
+          el('url').value = targetUrl;
+          const parsed = parseTmdbUrl(targetUrl);
+          if (parsed && parsed.rawSlug) {
+            el('slug').value = `${slugify(parsed.rawSlug)}-${parsed.type}-${parsed.id}`;
+          }
+          const key = (localStorage.getItem(STORAGE_API_KEY) || '').trim();
+          if (key) {
+            generate();
+          }
+        }
+      }
+
+      // Initialize
+      updateKeyStatusUI();
+      updateBookmarkletUI();
+      await loadTemplateFromDisk();
+      handleUrlParams();
+
+    })();
+  </script>
+</body>
+
+</html>
