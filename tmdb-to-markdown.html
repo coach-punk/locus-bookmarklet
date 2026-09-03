@@ -284,39 +284,225 @@
     }
 
     /* Star rating widget */
+    .rating-label-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .rating-label-header label {
+      margin-bottom: 0;
+      cursor: pointer;
+    }
+
+    .rating-quick-actions {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .rating-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 20px;
+      padding: 0 7px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--surface-border);
+      border-radius: 10px;
+      color: var(--text-muted);
+      cursor: pointer;
+      line-height: 1;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .rating-chip:hover {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .rating-chip.active {
+      background: rgba(99, 102, 241, 0.22);
+      border-color: var(--accent);
+      color: #c7d2fe;
+    }
+
+    .rating-chip-gear {
+      padding: 0 5px;
+    }
+
     .rating-row {
       display: flex;
       align-items: center;
       gap: 8px;
+      width: 100%;
+    }
+
+    .input-rating-num {
+      flex: 0 0 54px;
+      width: 54px;
+      height: 42px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 0 6px;
+      box-sizing: border-box;
+      -moz-appearance: textfield;
+    }
+
+    .input-rating-num::-webkit-inner-spin-button,
+    .input-rating-num::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
 
     .star-picker {
+      flex: 1;
+      height: 42px;
       display: flex;
-      gap: 4px;
+      align-items: center;
+      justify-content: space-evenly;
       background: rgba(15, 23, 42, 0.6);
       border: 1px solid var(--surface-border);
       border-radius: var(--radius-sm);
-      padding: 6px 10px;
-      align-items: center;
+      padding: 0 6px;
+      box-sizing: border-box;
+      user-select: none;
+      transition: border-color 0.2s;
+    }
+
+    .star-picker:hover {
+      border-color: rgba(99, 102, 241, 0.4);
     }
 
     .star-btn {
       background: none;
       border: none;
-      font-size: 20px;
+      font-size: 21px;
       color: #475569;
       cursor: pointer;
       line-height: 1;
-      padding: 0 2px;
-      transition: color 0.15s;
+      padding: 0 1px;
+      transition: color 0.15s, transform 0.1s;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      max-width: 34px;
+    }
+
+    .star-btn:hover {
+      transform: scale(1.18);
+      color: #f59e0b;
     }
 
     .star-btn.active {
       color: #fbbf24;
     }
 
-    .star-btn:hover {
+    .star-btn.preview-active {
       color: #f59e0b;
+    }
+
+    .star-picker.scale-10 .star-btn {
+      font-size: 16px;
+      max-width: 22px;
+      padding: 0;
+    }
+
+    /* Settings Rating Tab */
+    .rating-config-section {
+      margin-bottom: 20px;
+    }
+
+    .rating-config-section h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin: 0 0 8px 0;
+    }
+
+    .rating-options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+
+    .rating-option-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      text-align: left;
+      font-family: inherit;
+    }
+
+    .rating-option-card:hover {
+      border-color: rgba(99, 102, 241, 0.5);
+      background: rgba(99, 102, 241, 0.08);
+    }
+
+    .rating-option-card.selected {
+      border-color: var(--accent);
+      background: rgba(99, 102, 241, 0.18);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    .rating-option-card .opt-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+
+    .rating-option-card .opt-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .rating-preview-box {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      margin-top: 14px;
+    }
+
+    .rating-preview-header {
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .rating-preview-display {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 16px;
+      color: #fbbf24;
+      font-family: monospace;
+    }
+
+    .rating-preview-tag {
+      font-size: 12px;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: monospace;
     }
 
     /* Buttons */
@@ -635,7 +821,6 @@
 
     /* Helper Utilities replacing inline styles */
     .brand-subtitle { font-size: 13px; color: var(--text-muted); }
-    .input-rating-num { width: 70px; }
     .helper-bar-content { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .btn-guide { padding: 6px 12px; font-size: 12px; }
     .btn-toggle-key { flex: 0 0 70px; }
@@ -880,16 +1065,22 @@
           <div class="form-group">
             <div class="row">
               <div>
-                <label for="rating">Rating (0-5)</label>
+                <div class="rating-label-header">
+                  <label for="rating" id="ratingLabel">Rating (0-5)</label>
+                  <div class="rating-quick-actions">
+                    <button type="button" id="quickToggleScale" class="rating-chip" title="Toggle 5 / 10 star scale">5★</button>
+                    <button type="button" id="quickToggleStyle" class="rating-chip" title="Toggle open stars (★/☆) vs filled only">★/☆</button>
+                    <button type="button" id="quickRatingSettings" class="rating-chip rating-chip-gear" title="Rating preferences" aria-label="Rating preferences">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
                 <div class="rating-row">
                   <input id="rating" type="number" min="0" max="5" step="1" placeholder="4" class="input-rating-num" />
-                  <div id="starPicker" class="star-picker" title="Click to rate">
-                    <button type="button" class="star-btn" data-val="1">★</button>
-                    <button type="button" class="star-btn" data-val="2">★</button>
-                    <button type="button" class="star-btn" data-val="3">★</button>
-                    <button type="button" class="star-btn" data-val="4">★</button>
-                    <button type="button" class="star-btn" data-val="5">★</button>
-                  </div>
+                  <div id="starPicker" class="star-picker" title="Click to rate"></div>
                 </div>
               </div>
               <div>
@@ -994,6 +1185,12 @@
         </svg>
         <span>Template</span>
       </button>
+      <button type="button" class="tab-btn" data-tab="rating">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+        <span>Rating</span>
+      </button>
     </div>
 
     <!-- Tab 1: API Key -->
@@ -1094,6 +1291,45 @@
           <code>&lt;user_rating&gt;</code>, <code>&lt;user_notes&gt;</code>, <code>&lt;tagline&gt;</code>,
           <code>&lt;posterUrl&gt;</code>, <code>&lt;overview&gt;</code>, <code>&lt;tmdbUrl&gt;</code>, etc.
         </p>
+      </div>
+    </div>
+
+    <!-- Tab 4: Rating Settings -->
+    <div class="tab-pane" id="tab-rating">
+      <div class="rating-config-section">
+        <h4>Rating Scale (Max Stars)</h4>
+        <div class="rating-options-grid" id="scaleOptionsGrid">
+          <button type="button" class="rating-option-card" data-scale="5">
+            <span class="opt-title">5 Stars (0–5)</span>
+            <span class="opt-desc">Standard 5-star rating scale</span>
+          </button>
+          <button type="button" class="rating-option-card" data-scale="10">
+            <span class="opt-title">10 Stars (0–10)</span>
+            <span class="opt-desc">Matches TMDB 10-point scale</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="rating-config-section">
+        <h4>Star Display Style</h4>
+        <div class="rating-options-grid" id="styleOptionsGrid">
+          <button type="button" class="rating-option-card" data-style="filled">
+            <span class="opt-title">Filled Only</span>
+            <span class="opt-desc">e.g. ★★★ (selected stars only)</span>
+          </button>
+          <button type="button" class="rating-option-card" data-style="open">
+            <span class="opt-title">Filled + Open</span>
+            <span class="opt-desc">e.g. ★★★☆☆ (shows empty star outlines)</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="rating-preview-box">
+        <div class="rating-preview-header">Live Preview (Sample: 3 Stars)</div>
+        <div class="rating-preview-display">
+          <span id="modalRatingStarsPreview">★★★</span>
+          <span class="rating-preview-tag">&lt;user_rating&gt;</span>
+        </div>
       </div>
     </div>
 
@@ -1237,6 +1473,7 @@ rating: <rating_num>
         el('settingsApiKey').value = localStorage.getItem(STORAGE_API_KEY) || '';
         el('templateEditor').value = activeTemplate;
         updateBookmarkletUI();
+        syncModalRatingUI();
         switchSettingsTab(defaultTab);
         settingsDialog.showModal();
       }
@@ -1310,6 +1547,9 @@ rating: <rating_num>
         }
         updateBookmarkletUI();
 
+        localStorage.setItem(STORAGE_RATING_MAX, currentRatingMax);
+        localStorage.setItem(STORAGE_RATING_STYLE, currentRatingStyle);
+
         updateKeyStatusUI();
         closeSettings();
         showToast('Settings saved successfully');
@@ -1346,30 +1586,209 @@ rating: <rating_num>
         }
       });
 
-      // Rating star picker
-      function setRating(val) {
-        el('rating').value = val || '';
-        const buttons = el('starPicker').querySelectorAll('.star-btn');
+      // Rating star scale and style state & preferences
+      const STORAGE_RATING_MAX = 'locus_rating_max';
+      const STORAGE_RATING_STYLE = 'locus_rating_style';
+
+      let currentRatingMax = parseInt(localStorage.getItem(STORAGE_RATING_MAX) || '5', 10);
+      if (isNaN(currentRatingMax) || (currentRatingMax !== 5 && currentRatingMax !== 10)) {
+        currentRatingMax = 5;
+      }
+
+      let currentRatingStyle = localStorage.getItem(STORAGE_RATING_STYLE) || 'filled';
+      if (currentRatingStyle !== 'filled' && currentRatingStyle !== 'open') {
+        currentRatingStyle = 'filled';
+      }
+
+      function renderStarPicker() {
+        const picker = el('starPicker');
+        if (!picker) return;
+        picker.innerHTML = '';
+        picker.classList.toggle('scale-10', currentRatingMax > 5);
+
+        for (let i = 1; i <= currentRatingMax; i++) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'star-btn';
+          btn.dataset.val = String(i);
+          btn.textContent = currentRatingStyle === 'open' ? '☆' : '★';
+          btn.title = `Rate ${i} of ${currentRatingMax}`;
+          picker.appendChild(btn);
+        }
+
+        const ratingInput = el('rating');
+        if (ratingInput) {
+          ratingInput.max = currentRatingMax;
+          ratingInput.placeholder = currentRatingMax > 5 ? '8' : '4';
+          const currentVal = Number(ratingInput.value);
+          if (currentVal > currentRatingMax) {
+            ratingInput.value = currentRatingMax;
+          }
+        }
+
+        const label = el('ratingLabel');
+        if (label) {
+          label.textContent = `Rating (0-${currentRatingMax})`;
+        }
+
+        updateQuickChips();
+        updateStarPickerUI(Number(el('rating').value) || 0);
+      }
+
+      function updateQuickChips() {
+        const scaleChip = el('quickToggleScale');
+        if (scaleChip) {
+          scaleChip.textContent = `${currentRatingMax}★`;
+          scaleChip.title = `Rating scale: ${currentRatingMax} stars. Click to toggle (5★ / 10★)`;
+        }
+        const styleChip = el('quickToggleStyle');
+        if (styleChip) {
+          styleChip.textContent = currentRatingStyle === 'open' ? '★/☆' : '★';
+          styleChip.classList.toggle('active', currentRatingStyle === 'open');
+          styleChip.title = `Star style: ${currentRatingStyle === 'open' ? 'Filled + Open stars' : 'Filled stars only'}. Click to toggle`;
+        }
+      }
+
+      function updateStarPickerUI(val, previewVal = null) {
+        const picker = el('starPicker');
+        if (!picker) return;
+        const activeVal = previewVal !== null ? previewVal : val;
+        const buttons = picker.querySelectorAll('.star-btn');
         buttons.forEach(btn => {
           const starVal = Number(btn.dataset.val);
-          btn.classList.toggle('active', starVal <= val);
+          const isActive = starVal <= activeVal;
+          btn.classList.toggle('active', isActive);
+          btn.classList.toggle('preview-active', previewVal !== null && isActive);
+          if (currentRatingStyle === 'open') {
+            btn.textContent = isActive ? '★' : '☆';
+          } else {
+            btn.textContent = '★';
+          }
         });
+      }
+
+      function setRating(val) {
+        const ratingInput = el('rating');
+        let numVal = null;
+        if (val !== '' && val !== null && val !== undefined) {
+          numVal = Number(val);
+          if (isNaN(numVal) || numVal < 0) numVal = null;
+          else numVal = Math.min(currentRatingMax, Math.round(numVal));
+        }
+        ratingInput.value = (numVal !== null && numVal > 0) ? numVal : (numVal === 0 ? '0' : '');
+        updateStarPickerUI(numVal || 0);
         if (lastFetchedData) {
-          lastFetchedData.userRating = val ? Number(val) : null;
+          lastFetchedData.userRating = (numVal !== null && numVal > 0) ? numVal : null;
           renderMarkdownFromTemplate(lastFetchedData);
         }
       }
 
-      el('starPicker').addEventListener('click', (e) => {
+      function setRatingScale(newMax) {
+        currentRatingMax = Number(newMax);
+        localStorage.setItem(STORAGE_RATING_MAX, currentRatingMax);
+        renderStarPicker();
+        if (lastFetchedData) {
+          if (lastFetchedData.userRating && lastFetchedData.userRating > currentRatingMax) {
+            lastFetchedData.userRating = currentRatingMax;
+          }
+          renderMarkdownFromTemplate(lastFetchedData);
+        }
+        syncModalRatingUI();
+      }
+
+      function setRatingStyle(newStyle) {
+        currentRatingStyle = newStyle;
+        localStorage.setItem(STORAGE_RATING_STYLE, currentRatingStyle);
+        updateQuickChips();
+        updateStarPickerUI(Number(el('rating').value) || 0);
+        if (lastFetchedData) {
+          renderMarkdownFromTemplate(lastFetchedData);
+        }
+        syncModalRatingUI();
+      }
+
+      function syncModalRatingUI() {
+        document.querySelectorAll('#scaleOptionsGrid .rating-option-card').forEach(btn => {
+          btn.classList.toggle('selected', Number(btn.dataset.scale) === currentRatingMax);
+        });
+        document.querySelectorAll('#styleOptionsGrid .rating-option-card').forEach(btn => {
+          btn.classList.toggle('selected', btn.dataset.style === currentRatingStyle);
+        });
+        updateModalRatingPreview();
+      }
+
+      function updateModalRatingPreview() {
+        const previewEl = el('modalRatingStarsPreview');
+        if (previewEl) {
+          const sampleRating = currentRatingMax > 5 ? 7 : 3;
+          const full = sampleRating;
+          const empty = (currentRatingStyle === 'open') ? Math.max(0, currentRatingMax - full) : 0;
+          previewEl.textContent = '★'.repeat(full) + '☆'.repeat(empty);
+          const header = document.querySelector('.rating-preview-header');
+          if (header) {
+            header.textContent = `Live Preview (Sample: ${sampleRating} of ${currentRatingMax} Stars)`;
+          }
+        }
+      }
+
+      // Star picker interactive clicks & hover preview
+      const starPickerEl = el('starPicker');
+      starPickerEl.addEventListener('click', (e) => {
         const btn = e.target.closest('.star-btn');
         if (!btn) return;
         const val = Number(btn.dataset.val);
-        const current = Number(el('rating').value);
+        const current = Number(el('rating').value) || 0;
         setRating(current === val ? 0 : val);
       });
 
+      starPickerEl.addEventListener('mouseover', (e) => {
+        const btn = e.target.closest('.star-btn');
+        if (btn) {
+          updateStarPickerUI(Number(el('rating').value) || 0, Number(btn.dataset.val));
+        }
+      });
+
+      starPickerEl.addEventListener('mouseleave', () => {
+        updateStarPickerUI(Number(el('rating').value) || 0);
+      });
+
       el('rating').addEventListener('input', (e) => {
-        setRating(Number(e.target.value));
+        const raw = e.target.value;
+        if (raw === '') {
+          setRating('');
+        } else {
+          setRating(Number(raw));
+        }
+      });
+
+      // Quick toggle chips
+      el('quickToggleScale').addEventListener('click', () => {
+        const nextScale = currentRatingMax === 5 ? 10 : 5;
+        setRatingScale(nextScale);
+        showToast(`Rating scale set to 0–${nextScale}`);
+      });
+
+      el('quickToggleStyle').addEventListener('click', () => {
+        const nextStyle = currentRatingStyle === 'filled' ? 'open' : 'filled';
+        setRatingStyle(nextStyle);
+        showToast(`Star style: ${nextStyle === 'open' ? 'Filled + Open (★★★☆☆)' : 'Filled only (★★★)'}`);
+      });
+
+      el('quickRatingSettings').addEventListener('click', () => {
+        openSettings('rating');
+      });
+
+      // Settings dialog Rating options listeners
+      document.querySelectorAll('#scaleOptionsGrid .rating-option-card').forEach(btn => {
+        btn.addEventListener('click', () => {
+          setRatingScale(Number(btn.dataset.scale));
+        });
+      });
+
+      document.querySelectorAll('#styleOptionsGrid .rating-option-card').forEach(btn => {
+        btn.addEventListener('click', () => {
+          setRatingStyle(btn.dataset.style);
+        });
       });
 
       // Slug generator and listener
@@ -1450,8 +1869,12 @@ rating: <rating_num>
 
       function starString(rating) {
         if (rating === null || rating === undefined || rating === '') return '';
-        const full = Math.max(0, Math.min(5, Math.round(Number(rating))));
-        return '★'.repeat(full);
+        const num = Number(rating);
+        if (isNaN(num)) return '';
+        const full = Math.max(0, Math.min(currentRatingMax, Math.round(num)));
+        if (full === 0 && currentRatingStyle !== 'open') return '';
+        const empty = (currentRatingStyle === 'open') ? Math.max(0, currentRatingMax - full) : 0;
+        return '★'.repeat(full) + '☆'.repeat(empty);
       }
 
       // Template Assembly Engine
@@ -1816,6 +2239,7 @@ rating: <rating_num>
       }
 
       // Initialize
+      renderStarPicker();
       updateKeyStatusUI();
       updateBookmarkletUI();
       await loadTemplateFromDisk();
