@@ -5,6 +5,8 @@
   <meta charset="utf-8" />
   <title>Locus TMDB Reviewer — Markdown Review Generator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="alternate icon" href="favicon.ico" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -48,7 +50,7 @@
 
     .container {
       width: 100%;
-      max-width: 960px;
+      max-width: 1080px;
       position: relative;
     }
 
@@ -281,6 +283,16 @@
 
     .row>* {
       flex: 1;
+    }
+
+    .row.rating-season-row > .rating-col {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .row.rating-season-row > .season-col {
+      flex: 0 0 115px;
+      min-width: 0;
     }
 
     /* Star rating widget */
@@ -893,7 +905,7 @@
     }
 
     .footer-inner {
-      max-width: 960px;
+      max-width: 1080px;
       margin: 0 auto;
       display: flex;
       align-items: center;
@@ -1014,6 +1026,14 @@
         </div>
       </div>
       <div class="header-actions">
+        <a href="https://1oc.us" target="_blank" rel="noopener noreferrer" class="header-icon-link" title="Visit Locus (1oc.us)" aria-label="Locus Website" id="headerLocusLink">
+          <svg width="20" height="20" viewBox="0 0 200 200" style="border-radius: 4px; overflow: hidden; display: block;">
+            <rect width="200" height="200" fill="#222222"></rect>
+            <g fill="#ffffff" transform="matrix(10.69010989010989,0,0,10.69010989010989,31.208598747646832,176.00605761245055)" stroke="#ffffff" stroke-width="0.2">
+              <path d="M9.14 0L6.44-9.93L3.71 0L0.01 0L4.57-14.22L8.28-14.22L12.86 0L9.14 0Z"></path>
+            </g>
+          </svg>
+        </a>
         <a href="https://github.com/coach-punk/locus-bookmarklet" target="_blank" rel="noopener noreferrer" class="header-icon-link" title="View Source on GitHub" aria-label="GitHub Repository" id="headerRepoLink">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
@@ -1063,8 +1083,8 @@
           </div>
 
           <div class="form-group">
-            <div class="row">
-              <div>
+            <div class="row rating-season-row">
+              <div class="rating-col">
                 <div class="rating-label-header">
                   <label for="rating" id="ratingLabel">Rating (0-5)</label>
                   <div class="rating-quick-actions">
@@ -1083,7 +1103,7 @@
                   <div id="starPicker" class="star-picker" title="Click to rate"></div>
                 </div>
               </div>
-              <div>
+              <div class="season-col">
                 <label for="season">Season <span class="label-hint">(TV only)</span></label>
                 <input id="season" type="text" placeholder="e.g. 1" />
               </div>
