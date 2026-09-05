@@ -1424,6 +1424,7 @@
         <p class="hint-template">
           Supported tags: <code>&lt;title&gt;</code>, <code>&lt;original_title&gt;</code>,
           <code>&lt;description&gt;</code>, <code>&lt;release_date&gt;</code>, <code>&lt;slug&gt;</code>,
+          <code>&lt;length&gt;</code>, <code>&lt;episodes&gt;</code>, <code>&lt;season&gt;</code>,
           <code>&lt;user_rating&gt;</code>, <code>&lt;user_notes&gt;</code>, <code>&lt;tagline&gt;</code>,
           <code>&lt;posterUrl&gt;</code>, <code>&lt;overview&gt;</code>, <code>&lt;tmdbUrl&gt;</code>, etc.
         </p>
@@ -1539,6 +1540,8 @@ tags:
     - reviews
 trailer: <youtubeUrl>
 rating: <rating_num>
+length: <length>
+episodes: <episodes>
 
 ---
 
@@ -1558,6 +1561,12 @@ rating: <rating_num>
 `;
 
       let activeTemplate = localStorage.getItem(STORAGE_TEMPLATE_KEY) || DEFAULT_TEMPLATE;
+      if (activeTemplate && !activeTemplate.includes('<length>') && !activeTemplate.includes('<episodes>')) {
+        if (activeTemplate.includes('rating: <rating_num>')) {
+          activeTemplate = activeTemplate.replace(/rating:\s*<rating_num>(\r?\n)+---/, 'rating: <rating_num>\nlength: <length>\nepisodes: <episodes>\n\n---');
+          localStorage.setItem(STORAGE_TEMPLATE_KEY, activeTemplate);
+        }
+      }
       let lastFetchedData = null;
 
       // Toast helper
@@ -1939,10 +1948,45 @@ rating: <rating_num>
           .replace(/^-+|-+$/g, '') || 'untitled';
       }
 
+      function cleanSeason(season) {
+        if (!season) return '';
+        const s = slugify(String(season).trim());
+        return s.replace(/^season-?/, '');
+      }
+
+      function buildSlug(rawOrTitle, type, id, season) {
+        let base = `${slugify(rawOrTitle)}-${type}-${id}`;
+        if (type === 'tv') {
+          const s = cleanSeason(season);
+          if (s) {
+            base += `-season-${s}`;
+          }
+        }
+        return base;
+      }
+
       el('slug').addEventListener('input', () => {
         if (lastFetchedData) {
           lastFetchedData.slug = el('slug').value.trim() || 'untitled';
           renderMarkdownFromTemplate(lastFetchedData);
+        }
+      });
+
+      el('season').addEventListener('input', () => {
+        const val = el('season').value.trim();
+        const currentSlug = el('slug').value.trim();
+        if (currentSlug) {
+          const seasonPart = cleanSeason(val);
+          // If slug matches a TV show slug pattern (ends with -tv-\d+ or -tv-\d+-season-...)
+          if (/-tv-\d+(?:-season-[a-z0-9-]+)?$/i.test(currentSlug)) {
+            const base = currentSlug.replace(/-season-[a-z0-9-]+$/i, '');
+            el('slug').value = seasonPart ? `${base}-season-${seasonPart}` : base;
+            if (lastFetchedData) {
+              lastFetchedData.slug = el('slug').value;
+              lastFetchedData.seasonNumber = val || null;
+              renderMarkdownFromTemplate(lastFetchedData);
+            }
+          }
         }
       });
 
@@ -1977,12 +2021,12 @@ rating: <rating_num>
       // Auto update slug when URL is changed
       el('url').addEventListener('change', () => {
         const parsed = parseTmdbUrl(el('url').value);
-        if (parsed && !el('slug').value.trim()) {
-          if (parsed.rawSlug) {
-            el('slug').value = `${slugify(parsed.rawSlug)}-${parsed.type}-${parsed.id}`;
-          }
+        if (parsed) {
           if (parsed.seasonNumber && !el('season').value.trim()) {
             el('season').value = parsed.seasonNumber;
+          }
+          if (parsed.rawSlug && !el('slug').value.trim()) {
+            el('slug').value = buildSlug(parsed.rawSlug, parsed.type, parsed.id, el('season').value || parsed.seasonNumber);
           }
         }
       });
@@ -2039,6 +2083,39 @@ rating: <rating_num>
 
         // 4. Slug
         result = result.replace(/<slug>/g, data.slug || 'untitled');
+
+        // 4b. Season
+        const seasonVal = data.seasonNumber !== null && data.seasonNumber !== undefined && data.seasonNumber !== '' ? String(data.seasonNumber) : '';
+        result = result.replace(/<season>/g, seasonVal);
+        result = result.replace(/<season_number>/g, seasonVal);
+        result = result.replace(/<seasonNumber>/g, seasonVal);
+
+        // 4c. Movie Length & TV Episodes
+        const lengthVal = data.length || (data.type === 'tv' && data.episodes ? `${data.episodes} episodes` : '');
+        const episodesVal = data.episodes !== null && data.episodes !== undefined && data.episodes !== '' ? String(data.episodes) : '';
+        const runtimeVal = data.length || (data.raw && data.raw.runtime ? `${data.raw.runtime} min` : '');
+
+        // Conditional YAML line cleanup:
+        // If movie (or no episodes), remove 'episodes: <episodes>' frontmatter line
+        if (data.type === 'movie' || !episodesVal) {
+          result = result.replace(/^episodes:\s*(?:<episodes>)?\r?\n/gm, '');
+        }
+        // If TV and template also contains <episodes>, remove 'length: <length>' line
+        if (data.type === 'tv' && (episodesVal || /<episodes>/i.test(template))) {
+          result = result.replace(/^length:\s*(?:<length>)?\r?\n/gm, '');
+        } else if (data.type === 'movie' && !lengthVal) {
+          result = result.replace(/^length:\s*(?:<length>)?\r?\n/gm, '');
+        }
+        if (data.type === 'tv' || !runtimeVal) {
+          result = result.replace(/^runtime:\s*(?:<runtime>)?\r?\n/gm, '');
+        }
+        if (!seasonVal) {
+          result = result.replace(/^season:\s*(?:<season>|<season_number>|<seasonNumber>)?\r?\n/gm, '');
+        }
+
+        result = result.replace(/<length>/g, lengthVal);
+        result = result.replace(/<episodes>/g, episodesVal);
+        result = result.replace(/<runtime>/g, runtimeVal);
 
         // 5. User Rating & Stars (<user_rating>, <user rating>, <stars>, <rating_num>)
         const userStars = data.userRating ? starString(data.userRating) : '';
@@ -2156,6 +2233,8 @@ rating: <rating_num>
           let tmdbData, title, originalTitle, overview, releaseDate, posterPath, backdropPath, voteAverage, genres, tagline;
 
           let youtubeUrl = '';
+          let movieLength = null;
+          let episodeCount = null;
 
           if (type === 'movie') {
             tmdbData = await tmdbFetch(apiKey, `/movie/${id}?append_to_response=videos`);
@@ -2168,6 +2247,10 @@ rating: <rating_num>
             voteAverage = tmdbData.vote_average ?? null;
             genres = (tmdbData.genres || []).map(g => g.name);
             tagline = tmdbData.tagline || '';
+
+            if (tmdbData.runtime) {
+              movieLength = `${tmdbData.runtime} min`;
+            }
 
             // Find official trailer or first YouTube video
             const videos = (tmdbData.videos && tmdbData.videos.results) || [];
@@ -2203,18 +2286,34 @@ rating: <rating_num>
                   if (sData.poster_path) posterPath = sData.poster_path;
                   if (sData.name) title += ` (${sData.name})`;
                   if (sData.air_date) releaseDate = sData.air_date;
+                  if (Array.isArray(sData.episodes)) {
+                    episodeCount = sData.episodes.length;
+                  }
                 }
               } catch (e) { }
+            } else if (tmdbData.number_of_episodes) {
+              episodeCount = tmdbData.number_of_episodes;
             }
           } else {
             throw new Error('Unsupported TMDB media type: ' + type);
           }
 
-          // Auto-generate slug if not entered by user
+          // Auto-generate slug if not entered by user, or ensure season is appended for TV
           let currentSlug = el('slug').value.trim();
           if (!currentSlug) {
-            currentSlug = `${slugify(title)}-${type}-${id}`;
+            currentSlug = buildSlug(title, type, id, seasonNumber);
             el('slug').value = currentSlug;
+          } else if (type === 'tv' && seasonNumber) {
+            const seasonPart = cleanSeason(seasonNumber);
+            if (seasonPart) {
+              if (/-season-[a-z0-9-]+$/i.test(currentSlug)) {
+                currentSlug = currentSlug.replace(/-season-[a-z0-9-]+$/i, `-season-${seasonPart}`);
+                el('slug').value = currentSlug;
+              } else if (!currentSlug.endsWith(`-season-${seasonPart}`)) {
+                currentSlug = `${currentSlug}-season-${seasonPart}`;
+                el('slug').value = currentSlug;
+              }
+            }
           }
 
           const ratingVal = el('rating').value.trim();
@@ -2241,6 +2340,9 @@ rating: <rating_num>
             userRating,
             notes,
             tmdbUrl,
+            seasonNumber,
+            length: movieLength,
+            episodes: episodeCount,
             raw: tmdbData
           };
 
@@ -2368,8 +2470,13 @@ rating: <rating_num>
         if (targetUrl) {
           el('url').value = targetUrl;
           const parsed = parseTmdbUrl(targetUrl);
-          if (parsed && parsed.rawSlug) {
-            el('slug').value = `${slugify(parsed.rawSlug)}-${parsed.type}-${parsed.id}`;
+          if (parsed) {
+            if (parsed.seasonNumber && !el('season').value.trim()) {
+              el('season').value = parsed.seasonNumber;
+            }
+            if (parsed.rawSlug) {
+              el('slug').value = buildSlug(parsed.rawSlug, parsed.type, parsed.id, el('season').value || parsed.seasonNumber);
+            }
           }
           const key = (localStorage.getItem(STORAGE_API_KEY) || '').trim();
           if (key) {

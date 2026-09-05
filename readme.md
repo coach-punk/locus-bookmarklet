@@ -39,7 +39,7 @@ Locus TMDB Reviewer is built as a **pure client-side static web application**:
 - 📑 **Universal Template Engine**: Reads templates from `ttm-template/` or lets you live-edit and save templates directly in the browser preferences.
 - ⚙️ **Collapsible Preferences Drawer**: Seamlessly configure your TMDB API key, auto-detect your generator URL, and customize templates without visual clutter.
 - 📺 **Movies, TV Shows & Seasons**: Full support for both feature films and episodic television series (including season-specific posters, air dates, and titles).
-- 🏷️ **Customizable Slug & Filenames**: Automatically derives clean slugs from titles and IDs (e.g. `dune-part-two-movie-693134`), fully editable before export.
+- 🏷️ **Customizable Slug & Filenames**: Automatically derives clean slugs from titles, types, and IDs with automatic season appending for TV series (e.g. `dune-part-two-movie-693134` or `silo-tv-125988-season-1`), fully editable before export.
 - 📋 **1-Click Copy & Download**: Live Markdown syntax preview with instant clipboard copying or `.md` file download named `<premiereDate>-<slug>.md`.
 - 🔖 **Smart Bookmarklet Companion**: Auto-detects your active hosting address and provides easy drag-and-drop or manual bookmark installation.
 
@@ -59,16 +59,15 @@ Host Locus TMDB Reviewer online for free so your bookmarklet works seamlessly ac
 
 ### Option 2: Run on a Local Web Server
 
-If you prefer running Locus locally on your computer:
+If you prefer running locally with Python:
 
-1. In this project directory, run a lightweight HTTP server:
-
+1. In this directory, launch a local web server:
    ```bash
    python3 -m http.server 8000
    ```
-
-2. Open **`http://localhost:8000/`** (or `http://localhost:8000/index.html`) in your browser.
-3. Configure your TMDB API Key in Preferences (**⚙️**).
+2. Visit **[http://localhost:8000/](http://localhost:8000/)** in your browser.
+3. Configure your API key in **⚙️ Preferences**.
+4. Drag the **Locus Reviewer** bookmarklet button to your browser bookmarks bar!
 
 > [!TIP]
 > **Why not open `index.html` directly via `file:///`?**
@@ -120,6 +119,8 @@ tags:
     - reviews
 trailer: <youtubeUrl>
 rating: <rating_num>
+length: <length>
+episodes: <episodes>
 
 ---
 
@@ -147,7 +148,8 @@ rating: <rating_num>
 | `<user_rating>` | Your star rating | `★★★★` |
 | `<rating_num>` | Your numeric rating (0–5) | `4` |
 | `<user_notes>` | Personal notes or review commentary | `Superb direction and cinematography.` |
-| `<slug>` | The editable slug for filenames and URLs | `oppenheimer-movie-872585` |
+| `<slug>` | The editable slug for filenames and URLs | `oppenheimer-movie-872585` or `silo-tv-125988-season-1` |
+| `<season>` | Season number (TV only) | `1` |
 
 #### Core TMDB Metadata Tags
 
@@ -158,6 +160,8 @@ rating: <rating_num>
 | `<overview>` / `<description>` | Official plot synopsis | `An American agent, under false suspicion...` |
 | `<release_date>` / `<premiereDate>` | Release date (YYYY-MM-DD) | `1996-05-22` |
 | `<year>` | 4-digit release year | `1996` |
+| `<length>` | Movie duration (`147 min`) or TV episode count (`10 episodes`) | `147 min` |
+| `<episodes>` | Number of episodes in season or series | `10` |
 | `<tagline>` | Promotional tagline | `Expect the Impossible.` |
 | `<posterUrl>` | High-resolution poster URL (`w500`) | `https://image.tmdb.org/t/p/w500/...jpg` |
 | `<backdropUrl>` | Backdrop wallpaper URL (`w1280`) | `https://image.tmdb.org/t/p/w1280/...jpg` |

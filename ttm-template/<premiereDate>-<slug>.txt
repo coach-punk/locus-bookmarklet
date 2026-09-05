@@ -8,7 +8,8 @@ tags:
     - reviews
 trailer: <youtubeUrl>
 rating: <rating_num>
-
+length: <length>
+episodes: <episodes>
 
 ---
 
